@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Ixudra\Curl\Facades\Curl;
 
 class ApiDiseaseController extends Controller
 {
@@ -28,24 +29,27 @@ class ApiDiseaseController extends Controller
     }
 
 
-    public function api(){
+    // public function api(){
         
-    $url = "http://127.0.0.1:8000/classify";
-    $image = asset("storage/diseases/1.png");
-    $ch = curl_init();
-    curl_setopt($ch,CURLOPT_URL,$url);
-    curl_setopt($ch,CURLOPT_POST,true);
-    curl_setopt($ch,CURLOPT_POSTFIELDS,$image);
-    curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
-    $resp = curl_exec($ch);
-    if($e =curl_exec($ch)) {
-        echo $e;
-    }else{
-    return(json_decode($resp));
+    // $url = "http://127.0.0.1:8000/classify";
+    // $image = asset("storage/diseases/1.png");
+    // $ch = curl_init();
+    // curl_setopt($ch,CURLOPT_URL,$url);
+    // curl_setopt($ch,CURLOPT_POST,true);
+    // curl_setopt($ch,CURLOPT_POSTFIELDS,$image);
+    // curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
+    // $resp = curl_exec($ch);
+    // if($e =curl_exec($ch)) {
+    //     echo $e;
+    // }else{
+    // return(json_decode($resp));
         
-    curl_close($ch);
+    // curl_close($ch);
 
-    }
+    // }
+
+
+
     // $response = Http::get('http://127.0.0.1:8000/classify');
     // $response->body();
     // $data =  $response->json();
@@ -95,25 +99,34 @@ class ApiDiseaseController extends Controller
     // curl_close($ch);
 
     // }
-    }
+  //  }
 
     public function upload(Request $request){
         $validator =  Validator::make($request->all(),[
             "image"=>'required|image|mimes:png,jpg,jpeg,gif'
         ]);
-    if($validator->fails()){
-        return response()->json([
-            "msg"=>$validator->errors()
-        ,409]);
-    }else{
-        $image_name= Storage::putFile("images",$request->image);
+        if($validator->fails()){
+            return response()->json([
+                "msg"=>$validator->errors()
+            ,409]);
+        }else{
+            $image_name= Storage::putFile("images",$request->image);
+        }
+
+
+        //ده المفروض نبقى نرجع فيه المرض 
+        //    return response()->json([
+        //     "category"=>"category created successfuly"
+        //    ,201]);
     }
 
-
-    //ده المفروض نبقى نرجع فيه المرض 
-    //    return response()->json([
-    //     "category"=>"category created successfuly"
-    //    ,201]);
-        
+    public function classify () {
+        $fieldName = 'file';
+        $pathToFile = storage_path('app/public/stotage/3.jpg');
+        $endpoint = 'http://127.0.0.1:8000/classify';
+        $response = Curl::to($endpoint)
+            ->withFile($fieldName, $pathToFile)
+            ->post();
+        return $response;
     }
 }
