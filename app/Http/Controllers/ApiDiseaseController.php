@@ -30,7 +30,7 @@ class ApiDiseaseController extends Controller
     
    
 
-    public function classify (Request $request) {
+   public function classify (Request $request) {
         $validator =  Validator::make($request->all(),[
             "image"=>'required|image|mimes:png,jpg,jpeg,gif'
         ]);
