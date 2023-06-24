@@ -25,83 +25,12 @@ class ApiDiseaseController extends Controller
                  "msg"=>"This Disease Not Found",404
              ]);
          }
-         return new DiseaseResource($disease);
-    }
+        return new DiseaseResource($disease);
+   }
+    
+   
 
-
-    // public function api(){
-        
-    // $url = "http://127.0.0.1:8000/classify";
-    // $image = asset("storage/diseases/1.png");
-    // $ch = curl_init();
-    // curl_setopt($ch,CURLOPT_URL,$url);
-    // curl_setopt($ch,CURLOPT_POST,true);
-    // curl_setopt($ch,CURLOPT_POSTFIELDS,$image);
-    // curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
-    // $resp = curl_exec($ch);
-    // if($e =curl_exec($ch)) {
-    //     echo $e;
-    // }else{
-    // return(json_decode($resp));
-        
-    // curl_close($ch);
-
-    // }
-
-
-
-    // $response = Http::get('http://127.0.0.1:8000/classify');
-    // $response->body();
-    // $data =  $response->json();
-
-    // $url = 'http://127.0.0.1:8000/classify';
-    // $data = array('key1' => 'value1', 'key2' => 'value2');
-
-    // // use key 'http' even if you send the request to https://...
-    // $options = array(
-    //     'http' => array(
-    //         'header'  => "Content-type: multipart/form-data\r\n",
-    //         'method'  => 'POST',
-    //         'content' => http_build_query($data)
-    //     )
-    // );
-    // $context  = stream_context_create($options);
-    // $result = file_get_contents($url, false, $context);
-    // if ($result === FALSE) { /* Handle error */ }
-
-    // var_dump($result);
-
-
-
-    // $url = "http://127.0.0.1:8000/classify";
-    // $image = asset("storage/diseases/1.png");
-
-    // $ch = curl_init();
-    // curl_setopt_array($ch, [
-    //     CURLOPT_URL => $url,
-    //     CURLOPT_RETURNTRANSFER => true,
-    //     CURLOPT_POST => true,
-    //     CURLOPT_POSTFIELDS => [
-    //         'file' => new \CurlFile($image, 'image/png', $image)
-    //     ],
-    //     CURLOPT_HTTPHEADER => [
-    //         'Accept: application/json',
-    //         'Content-Type: multipart/form-data',   
-    //     ],
-    // ]);
-    // $resp = curl_exec($ch);
-
-    // if($e =curl_exec($ch)) {
-    //     echo $e;
-    // }else{
-    //    return(json_decode($resp));
-        
-    // curl_close($ch);
-
-    // }
-  //  }
-
-    public function upload(Request $request){
+    public function classify (Request $request) {
         $validator =  Validator::make($request->all(),[
             "image"=>'required|image|mimes:png,jpg,jpeg,gif'
         ]);
@@ -111,22 +40,30 @@ class ApiDiseaseController extends Controller
             ,409]);
         }else{
             $image_name= Storage::putFile("images",$request->image);
-        }
+            $fieldName = 'file';
+            $pathToFile = storage_path('app/public/'.$image_name);
+            $endpoint = 'http://127.0.0.1:8000/classify';
+            $response = Curl::to($endpoint)
+                ->withFile($fieldName, $pathToFile)
+                ->post();
+            Storage::delete($image_name);
 
-
-        //ده المفروض نبقى نرجع فيه المرض 
-        //    return response()->json([
-        //     "category"=>"category created successfuly"
-        //    ,201]);
-    }
-
-    public function classify () {
-        $fieldName = 'file';
-        $pathToFile = storage_path('app/public/stotage/3.jpg');
-        $endpoint = 'http://127.0.0.1:8000/classify';
-        $response = Curl::to($endpoint)
-            ->withFile($fieldName, $pathToFile)
-            ->post();
-        return $response;
+            $arr = json_decode($response);
+            $id=0;   
+            for($i=0; $i<=6; $i++){
+                if ($arr[0] == $i){
+                    $id= $i+1;
+                } elseif($arr[1]== $i){
+                        $id= $i+1;
+                }
+            }
+            $disease =  Disease::find($id);
+            $name = $disease->name;
+            return response()->json([
+              "disease"=>$name
+            ]);
+  
+        }   
+        
     }
 }

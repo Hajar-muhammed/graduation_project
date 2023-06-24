@@ -18,4 +18,3 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::get('diseases',[DiseaseController::class,"all"]);
-Route::get('api',[DiseaseController::class,"api"]);
