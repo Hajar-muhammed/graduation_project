@@ -42,28 +42,39 @@ class ApiDiseaseController extends Controller
             $image_name= Storage::putFile("images",$request->image);
             $fieldName = 'file';
             $pathToFile = storage_path('app/public/'.$image_name);
-            $endpoint = 'http://127.0.0.1:8000/classify';
+            $endpoint = 'http://137.184.38.102:5000/classify';
             $response = Curl::to($endpoint)
                 ->withFile($fieldName, $pathToFile)
                 ->post();
             Storage::delete($image_name);
-
-            $arr = json_decode($response);
-            $id=0;   
+            $arr = json_decode($response,true);
+            $id=0; 
             for($i=0; $i<=6; $i++){
-                if ($arr[0] == $i){
+                if ($arr['class_id'] == $i){
                     $id= $i+1;
-                } elseif($arr[1]== $i){
-                        $id= $i+1;
                 }
             }
             $disease =  Disease::find($id);
             $name = $disease->name;
-            return response()->json([
-              "disease"=>$name
-            ]);
-  
-        }   
+            $id = $disease->id;  
+            $perce = round($arr['score'],2) * 100 ."%";
+            if($arr['score'] >0.37){
+                return response()->json([
+                "disease"=>$name,
+                    "score"=> $perce,
+                    "id"=>$id,
+                    "msg"=>null
+                ]);
+            }else{
+                return response()->json([
+                    "disease"=>$name,
+                    "score"=>$perce,
+                    "id"=>$id,
+                    "msg"=>"The percentage is very small, so you are mostly normal"
+                ]);
+            }
         
+        }   
+   
     }
 }
